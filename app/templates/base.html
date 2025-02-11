@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }} - 学生信息查询系统 </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div>首页: <a href="/index">Home</a>   登录：<a href="/login">Login</a></div> 上传数据：<a href="/upload_boll">Upload</a>
+  ImportData:<a href="/import_boll/PKLIST_REQUEST_CHINA.xlsx">Import Data</a>
+  <a href="{{ url_for('search_fystboll') }}"> Search</a>
+
+  <hr>
+  {% with message = get_flashed_messages() %}
+  {% if message %}
+  <ul>
+      {% for message in messages %}
+      <li>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+  {% block content %} {% endblock %}
+</body>
+</html>

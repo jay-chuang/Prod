@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<h1>托盘标签打印</h1>
+<form action="{{ url_for('search_fystboll') }}" method="post">
+    {{ search_fystboll_form.hidden_tag() }}
+    <label>Please enter the pallet number</label>
+    <p>{{ search_fystboll_form.pallet_num.label }}:
+        {{ search_fystboll_form.pallet_num(size=32) }}</p>
+    <p> {{ search_fystboll_form.submit }}</p>
+
+
+</form>
+
+
+{% endblock %}

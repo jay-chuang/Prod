@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Upload FYSTBOLL Excel File</h1>
+    <form action="{{ url_for('upload_boll') }}" method="post" enctype="multipart/form-data">
+        {{ upload_form.hidden_tag() }}
+        <p>{{ upload_form.file.label }}: {{ upload_form.file }}</p>
+        <input type="submit" value="提交">
+
+    </form>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+

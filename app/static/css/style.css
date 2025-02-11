@@ -1,0 +1,76 @@
+/* 针对打印的媒体查询 */
+@media print {
+    /* 设置页面大小为A4值的横向尺寸 */
+    @page {
+        size: landscape;
+        margin: 0;
+    }
+
+    /* 移除body的默认边框*/
+    body {
+        width: 297mm;
+        height: 210mm;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /*  可选： 如果你有一个特定的容器，确保填满整个页面 */
+    .page-content {
+        width: 100%;
+        height: 100%;
+        padding: 10mm; /* 根据需要调整边距 */
+        box-sizing: border-box;
+    }
+}
+
+h1 {
+    color: #007bff;
+}
+
+table {
+    border-collapse: collapse;
+    border: 1px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 20px; /* 上下20px, 左右自动表格居中 */
+    margin-right: 20px; /*右边20px */
+    padding: 8px; /*  表格内部与表格内容的距离 */
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid #ddd;
+
+    padding: 8px;
+    width: 12px;
+    height: 37px;
+}
+
+img {
+    object-fit: cover; /* 保持图片的纵横比例 */
+    width: 100%;
+    height: 100%;
+
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+}
+
+.pagination-page-info {
+    padding: .6em;
+    padding-left: 0;
+    width: 40em;
+    margin: .5em;
+    margin-left: 0;
+    font-size: 12px;
+}
+.pagination-page-info b {
+    color: black;
+    background: #6aa6ed;
+    padding-left: 2px;
+    padding: .1em .25em;
+    font-size: 150%;
+}

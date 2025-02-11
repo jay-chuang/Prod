@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table border="1">
+    <tr>
+        <th><a href="{{ url_for('search_fystboll') }}">Back to Search</a></th>
+        <th colspan="4">Search Results for : {{ pallet_number }}</th>
+        <th><a href="{{ url_for('print_fystboll') }}">Print All</a></th>
+        <th><a href="{{ url_for('fystboll_pdf', pallet_number=pallet_number) }}">Export to PDF</a></th>
+        <th><a href="{{ url_for('fystboll_excel', pallet_number=pallet_number) }}">Export to Excel</a></th>
+    </tr>
+    <tr>
+        <th>Pallet</th>
+        <th>Item Code</th>
+        <th>Item Description</th>
+        <th>Width</th>
+        <th>Length</th>
+        <th>Quantity</th>
+        <th>Coil</th>
+        <th>Coil Barcode</th>
+    </tr>
+    {% for item in fystboll_data %}
+        <tr>
+            <td>{{ item.pallet }}</td>
+            <td>{{ item.item_code }}</td>
+            <td>{{ item.item_description }}</td>
+            <td>{{ item.width }}</td>
+            <td>{{ item.length }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.coil }} </td>
+            <td><img src="{{ url_for('static', filename='barcodes/' + item.coil + '.png') }}" alt="Barcode"></td>
+        </tr>
+    {% endfor %}
+
+</table>
+
+<div>
+    {% if fystboll_data.has_prev %}
+        <a href="{{ url_for('display_fystboll', pallet_number=pallet_number, page=fystboll_data.prev_num) }}">Previous</a>
+    {% endif %}
+    <span>Page {{ fystboll_data.page }} of {{ fystboll_data.pages }}</span>
+    {% if fystboll_data.has_next %}
+        <a href="{{ url_for('display_fystboll', pallet_number=pallet_number, page=fystboll_data.next_num) }}">Next</a>
+    {% endif %}
+</div>
+
+{% endblock %}

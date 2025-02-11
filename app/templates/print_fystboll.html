@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table border="1">
+    <tr>
+        <th>Pallet</th>
+        <th>Item Code</th>
+        <th>Item Descritpion</th>
+        <th>Width</th>
+        <th>Length</th>
+        <th>Quantity</th>
+        <th>Coil</th>
+        <th>Coil Barcode</th>
+    </tr>
+    {% for item in print_fystboll_data %}
+        <tr>
+            <td>{{ item.pallet }}</td>
+            <td>{{ item.item_code }}</td>
+            <td>{{ item.item_description }}</td>
+            <td>{{ item.width }}</td>
+            <td>{{ item.length }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.coil }} </td>
+            <td><img src="{{ url_for('static', filename='barcodes/' + item.coil + '.png') }}" alt="Barcode"></td>
+        </tr>
+    {% endfor %}
+
+</table>
+{% endblock %}
+
