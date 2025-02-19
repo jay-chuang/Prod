@@ -2,8 +2,7 @@
 
 
 {% block content %}
-    <h1>Hi, {{ user.username }}</h1>
-    {% for post in posts %}
-    <div><p>{{ post.author.username }} says: <b> {{ post.body }}</b></p></div>
-    {% endfor %}
+    <h1>Hi, {{ user.display_name }}</h1>
+    <p>User Name: {{ user }}</p>
+    <p>Email: {{ user.email }}</p>
 {% endblock %}

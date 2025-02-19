@@ -1,17 +1,30 @@
 from typing import Optional
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from app import db
+from app import db, login_manager
+from flask_login import UserMixin
 
 
-class Users(db.Model):
-    id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
-    email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
-    password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
+# class Users(db.Model):
+#     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+#     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
+#     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
+#     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
+#
+#     def __repr__(self):
+#         return '<User {}>'.format(self.username)
+
+class Users(UserMixin):
+    def __init__(self, dn, username, data):
+        self.dn = dn
+        self.username = username
+        self.data = data  # store attributes from LDAP
 
     def __repr__(self):
-        return '<User {}>'.format(self.username)
+        return self.dn
+
+    def get_id(self):
+        return self.dn
 
 
 # define the database model

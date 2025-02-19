@@ -1,6 +1,7 @@
-from app import app, db,ldap_manager
-from flask import render_template, flash, redirect, request, url_for, jsonify, send_file, Blueprint, session, Response
+from app import app, db, ldap_manager, login_manager
+from flask import render_template, flash, redirect, request, url_for, jsonify, send_file, Blueprint, session
 from app.forms import LoginForm, UploadBoll, Search_Fystboll
+from flask_login import LoginManager, UserMixin, current_user, login_user, login_required
 import os
 from io import BytesIO
 import pandas as pd
@@ -20,52 +21,74 @@ from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import A4, landscape
 # 导入reportlab.platypus的表格形式
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Image, PageBreak, Paragraph, Frame
+from app.tasks import ldap_authenticate
+
+
+@login_manager.user_loader
+def load_user(dn):
+    # 通过DN加载用户
+    return Users(dn=dn, username=dn, data={})
 
 
 @app.route('/')
 @app.route('/index')
+# @login_required
 def index():
-    user = {'username': 'Jay'}
-    posts = [
-        {
-            'author': {'username': 'John'},
-            'body': 'Beautiful day in Portland'
-        },
-        {
-            'author': {'username': 'Jay'},
-            'body': 'The Avengers movie was so cool'
-        }
-    ]
-    return render_template('index.html', title='铭传八中上派初级中学', user=user, posts=posts)
-    # return "Hello World!"
+    # Redirect users who are not logged in.
+    if 'username' in session:
+        return render_template('index.html', title='铭传八中上派初级中学', user=session['username'])
+    return redirect(url_for('login'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     form = LoginForm()
     # if form.validate_on_submit():
-        # username = form.username.data
-        # password = form.password.data
-        #
-        # # attempt to authenticate with LDAP
-        # try:
-        #     user = ldap_manager.authenticate(username, password)
-        #     if user.status == 'Sucess':
-        #         session['user'] = user.user_dn
-        #         flash('Login successful!', 'sucess')
-        #         return redirect(url_for('upload_boll'))
-        #     else:
-        #         flash('Invalid credentials', 'danger')
-        # except Exception as e:
-        #     flash(f'Authentication error: {e}', 'danger')
-        # flash('Login request for user {}, remember_me={}'.format(
-        #     form.username.data, form.remember_me.data
-        # ))
-        # return redirect('/index')
+    #     # Successfully logged in, we can now access teh saved user object via form.user
+    #     login_user(user)  # tell flask-login to log them in.
+    #     return redirect('/index')
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        # authenticate the user
+        user = ldap_manager.authenticate(username, password)
+        if user:
+            session['username'] = username # save the username to session
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid credentials. Please try again.', 'error')
+
     return render_template('login.html', title='Sign In', form=form)
 
 
+def get_user_info(username):
+    user = ldap_manager.get_user_info_for_username(username)
+    if user:
+        return {
+            'full_name': user.cn,
+            'email': user.mail
+        }
+    return None
+#
+#
+# @app.route('/profile/<username>')
+# @login_required
+# def profile(username):
+#     # 显示用户信息
+#     user_info = get_user_info(username)
+#     # user_info = {
+#     #     'username': current_user.username,
+#     #     'email': current_user.data.get('mail', ''),
+#     #     'display_name': current_user.data.get('displayname', '')
+#     # }
+#
+#     return render_template('profile.html', username=username, user_info=user_info)
+
+
 @app.route('/logout')
+@login_required
 def logout():
     session.pop('user', None)
     flash('You have been logged out.', 'info')
@@ -73,6 +96,7 @@ def logout():
 
 
 @app.route('/upload_boll', methods=['GET', 'POST'])
+@login_required
 def upload_boll():
     upload_form = UploadBoll()
     if upload_form.validate_on_submit():
@@ -128,6 +152,7 @@ def upload_boll():
 
 
 @app.route('/search_fystboll', methods=['GET', 'POST'])
+@login_required
 def search_fystboll():
     search_fystboll_form = Search_Fystboll()
     if search_fystboll_form.validate_on_submit():
@@ -143,6 +168,7 @@ def search_fystboll():
 # @app.route('/display_fystboll/<pallet_number>', methods=['GET', 'POST'])
 # def display_fystboll(pallet_number):
 @app.route('/display_fystboll', methods=['GET', 'POST'])
+@login_required
 def display_fystboll():
     # import search form
     # search_fystboll_form = Search_Fystboll()
@@ -170,6 +196,7 @@ def display_fystboll():
 
 
 @app.route('/print_fystboll')
+@login_required
 def print_fystboll():
     page = request.args.get('page', 1, type=int)
     per_page = app.config['PER_PAGE']
@@ -183,6 +210,7 @@ def print_fystboll():
 
 
 @app.route('/export/excel')
+@login_required
 def fystboll_excel():
     pallet_number = request.args.get('pallet_number', '')
 
@@ -224,6 +252,7 @@ def fystboll_excel():
 
 
 @app.route('/export/pdf')
+@login_required
 def fystboll_pdf():
     """从数据库查询数据"""
     pallet_number = request.args.get('pallet_number')

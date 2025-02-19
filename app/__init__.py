@@ -12,7 +12,9 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 # initialize LDAP manager
-# login_manager = LoginManager(app)
-ldap_manager = LDAP3LoginManager(app)
+login_manager = LoginManager(app)  # setup a Flask-login manager
+login_manager.login_view = 'login'
+ldap_manager = LDAP3LoginManager(app)  # Setup a LDAP3 Login Manager
+ldap_manager.init_app(app)
 
 from app import routes, models, forms

@@ -9,6 +9,8 @@ from ldap3.core.exceptions import LDAPException, LDAPBindError
 import config
 from config import Config
 from flask import redirect, url_for
+from app import db, login_manager, ldap_manager
+from app.models import Users
 
 
 def generate_code128(barcode_data):
@@ -32,6 +34,76 @@ def generate_code128(barcode_data):
     # return buffer
     # # return picture file
     # # return send_file(filename, mimetype='image/png')
+
+
+users = {}
+
+
+# declare a user loader for flask-login
+# Simply returns the user if it exists in our database, otherwise returns None
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id in users:
+        return users[user_id]
+    return None
+
+
+# declare the user saver for flask-ldap3-login
+# this method is called whenever a LDAPLoginForm() successfully validates.
+# Here you have to save the user, and return it so it can be used in the login controller.
+@ldap_manager.save_user
+def save_user(dn, username, data, memberships):
+    id=int(data.get("uidNumber"))
+    user=Users.query.filter_by(id=id).first()
+    if not user:
+        user=Users(
+            id=int(id),
+            dn=dn,
+            username=username,
+            email=data['mail'],
+            firstname=data['givenName'],
+            lastname=data['sn']
+        )
+
+        db.session.add(user)
+        db.session.commit(0)
+    return user
+
+
+def ldap_authenticate(username, password):
+    try:
+        # create server object
+        server = Server(Config.LDAP_HOST, port=Config.LDAP_PORT, get_info=ALL)
+        # 1st step, bind the administrator user to search users' DN
+        with Connection(server, user=Config.LDAP_BIND_DN, password=Config.LDAP_BIND_USER_PASSWORD) as conn:
+            search_filter = f'({Config.LDAP_USER_SEARCH_ATTR}={username})'
+            conn.search(search_base=Config.LDAP_BASE_DN,
+                        search_filter=search_filter,
+                        search_scope=SUBTREE,
+                        attributes=['*'])   # get all attributes
+            if len(conn.entries) == 0:
+                return None, None  # the user is not exist
+
+            user_entry = conn.entries[0]
+            user_dn = user_entry.entry_dn
+
+        # the 2nd step, use username and password to authenticate user information
+        with Connection(server, user=user_dn, password=password) as conn:
+            if conn.bind():
+                # get user information
+                user_info = {
+                    'dn': user_dn,
+                    'username': username,
+                    'display_name': user_entry.displayName.value,
+                    'email': user_entry.mail.value,
+                    'groups': user_entry.memeberOf.value if 'memberOf' in user_entry else []
+                }
+                return user_dn, user_info
+            else:
+                return None, None
+    except Exception as e:
+        print(f"LDAP Error: {e}")
+        return None, None
 
 
 def global_ldap_authentication(user_name, user_pwd):
